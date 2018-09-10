@@ -1,0 +1,8 @@
+[package]
+name = "rusterizer"
+version = "0.1.0"
+authors = ["AmiliaM <amiliamac@gmail.com>"]
+
+[dependencies.sdl2]
+version = "0.31.0"
+default-features = true
