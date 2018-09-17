@@ -27,22 +27,28 @@ fn main() {
             }
         }
         canvas.set_draw_color(Color::RGB(0, 255, 255));
-        line(100, 100, 150, 150, &mut canvas);
+        for y in 100..150 {
+            line(100, 100, 150, y, &mut canvas);
+        }
 
         canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }
 
-fn line(x0: u32, y0: u32, x1: u32, y1: u32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) { //Starting coordinate, finishing coordinate
+fn line(x0: i32, y0: i32, x1: i32, y1: i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) { //Starting coordinate, finishing coordinate, reference to canvas
     //Bressenhalm line
     let dy = y1 - y0;
     let dx = x1 - x0;
-    let m = dy / dx;
+    let mut error = dx / 2;
     let mut y = y0;
     for x in x0..x1 {
-        canvas.draw_point(Point::new(x as i32, y as i32));
-        y += m;
+        error -= dy;
+        canvas.draw_point(Point::new(x, y));
+        if error <= 0 {
+            y += 1;
+            error += dx / 2;
+        }
     }
 
 }
