@@ -29,9 +29,9 @@ fn main() {
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
         canvas.set_draw_color(Color::RGB(0, 255, 255));
-        for y in 0..200 {
+        /*for y in 0..200 {
             line(100, 100, 200, y, &mut canvas);
-        }
+        }*/
         //rect(200, 200, 300, 300, &mut canvas);
         //ellipse(200, 200, 100, 100, &mut canvas);
         canvas.present();
