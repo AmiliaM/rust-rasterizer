@@ -1,0 +1,62 @@
+TARGET = Some("x86_64-unknown-linux-gnu")
+OPT_LEVEL = Some("0")
+TARGET = Some("x86_64-unknown-linux-gnu")
+HOST = Some("x86_64-unknown-linux-gnu")
+TARGET = Some("x86_64-unknown-linux-gnu")
+TARGET = Some("x86_64-unknown-linux-gnu")
+HOST = Some("x86_64-unknown-linux-gnu")
+CC_x86_64-unknown-linux-gnu = None
+CC_x86_64_unknown_linux_gnu = None
+HOST_CC = None
+CC = None
+HOST = Some("x86_64-unknown-linux-gnu")
+TARGET = Some("x86_64-unknown-linux-gnu")
+HOST = Some("x86_64-unknown-linux-gnu")
+CFLAGS_x86_64-unknown-linux-gnu = None
+CFLAGS_x86_64_unknown_linux_gnu = None
+HOST_CFLAGS = None
+CFLAGS = None
+DEBUG = Some("true")
+TARGET = Some("x86_64-unknown-linux-gnu")
+HOST = Some("x86_64-unknown-linux-gnu")
+CFLAGS_x86_64-unknown-linux-gnu = None
+CFLAGS_x86_64_unknown_linux_gnu = None
+HOST_CFLAGS = None
+CFLAGS = None
+TARGET = Some("x86_64-unknown-linux-gnu")
+HOST = Some("x86_64-unknown-linux-gnu")
+CFLAGS_x86_64-unknown-linux-gnu = None
+CFLAGS_x86_64_unknown_linux_gnu = None
+HOST_CFLAGS = None
+CFLAGS = None
+running: "cc" "-O0" "-ffunction-sections" "-fdata-sections" "-fPIC" "-g" "-fno-omit-frame-pointer" "-m64" "-Wall" "-Wextra" "-o" "/home/amilia/Documents/rusterizer/target/debug/build/miniz-sys-6224e126a8b0cc18/out/miniz.o" "-c" "miniz.c"
+cargo:warning=miniz.c: In function ‘tinfl_decompress’:
+cargo:warning=miniz.c:1531:9: warning: this ‘for’ clause does not guard... [-Wmisleading-indentation]
+cargo:warning=         for ( i = 0; i <= 143; ++i) *p++ = 8; for ( ; i <= 255; ++i) *p++ = 9; for ( ; i <= 279; ++i) *p++ = 7; for ( ; i <= 287; ++i) *p++ = 8;
+cargo:warning=         ^~~
+cargo:warning=miniz.c:1531:47: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘for’
+cargo:warning=         for ( i = 0; i <= 143; ++i) *p++ = 8; for ( ; i <= 255; ++i) *p++ = 9; for ( ; i <= 279; ++i) *p++ = 7; for ( ; i <= 287; ++i) *p++ = 8;
+cargo:warning=                                               ^~~
+cargo:warning=miniz.c: In function ‘tdefl_find_match’:
+cargo:warning=miniz.c:2327:5: warning: this ‘if’ clause does not guard... [-Wmisleading-indentation]
+cargo:warning=     if (!dist) break; q = (const mz_uint16*)(d->m_dict + probe_pos); if (TDEFL_READ_UNALIGNED_WORD(q) != s01) continue; p = s; probe_len = 32;
+cargo:warning=     ^~
+cargo:warning=miniz.c:2327:23: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+cargo:warning=     if (!dist) break; q = (const mz_uint16*)(d->m_dict + probe_pos); if (TDEFL_READ_UNALIGNED_WORD(q) != s01) continue; p = s; probe_len = 32;
+cargo:warning=                       ^
+exit code: 0
+TARGET = Some("x86_64-unknown-linux-gnu")
+TARGET = Some("x86_64-unknown-linux-gnu")
+HOST = Some("x86_64-unknown-linux-gnu")
+AR_x86_64-unknown-linux-gnu = None
+AR_x86_64_unknown_linux_gnu = None
+HOST_AR = None
+AR = None
+TARGET = Some("x86_64-unknown-linux-gnu")
+TARGET = Some("x86_64-unknown-linux-gnu")
+running: "ar" "crs" "/home/amilia/Documents/rusterizer/target/debug/build/miniz-sys-6224e126a8b0cc18/out/libminiz.a" "/home/amilia/Documents/rusterizer/target/debug/build/miniz-sys-6224e126a8b0cc18/out/miniz.o"
+exit code: 0
+TARGET = Some("x86_64-unknown-linux-gnu")
+cargo:rustc-link-lib=static=miniz
+cargo:rustc-link-search=native=/home/amilia/Documents/rusterizer/target/debug/build/miniz-sys-6224e126a8b0cc18/out
+cargo:root=/home/amilia/Documents/rusterizer/target/debug/build/miniz-sys-6224e126a8b0cc18/out
