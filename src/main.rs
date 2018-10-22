@@ -33,13 +33,13 @@ fn main() {
             line(100, 100, 200, y, &mut canvas);
         }*/
         //rect(200, 200, 300, 300, &mut canvas);
-        //ellipse(200, 200, 100, 100, &mut canvas);
+        ellipse(400, 400, 200, 100, &mut canvas);
         canvas.present();
         let error = ::sdl2::get_error();
         if error != "" {
             println!("{}", error);
         }
-        //::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }
 
@@ -76,26 +76,24 @@ fn rect(x0: i32, y0: i32, x1: i32, y1: i32, canvas: &mut sdl2::render::Canvas<sd
     line(x0, y1, x1, y1, canvas);
 }
 
-fn ellipse_point(x: i32, y: i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
-    canvas.draw_point(Point::new(x, y));
-    canvas.draw_point(Point::new(-x, y));
-    canvas.draw_point(Point::new(x, -y));
-    canvas.draw_point(Point::new(-x, -y));
+fn ellipse_point(x: i32, y: i32, x_:i32, y_:i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
+    canvas.draw_point(Point::new(x + x_, y + y_));
+    canvas.draw_point(Point::new(-x + x_, y + y_));
+    canvas.draw_point(Point::new(x + x_, -y + y_));
+    canvas.draw_point(Point::new(-x + x_, -y + y_));
 
-    canvas.draw_point(Point::new(y, x));
-    canvas.draw_point(Point::new(-y, x));
-    canvas.draw_point(Point::new(y, -x));
-    canvas.draw_point(Point::new(-y, -x));
+    canvas.draw_point(Point::new(y + x_, x + y_));
+    canvas.draw_point(Point::new(-y + x_, x + y_));
+    canvas.draw_point(Point::new(y + x_, -x + y_));
+    canvas.draw_point(Point::new(-y + x_, -x + y_));
 }
 
 fn ellipse(x_: i32, y_: i32, a: i32, b: i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) { //Center coordinate, width, height
     //Bressenhalm ellipse
-    //let x_ = x;
-    //let y_ = y;
     let mut x = 0;
     let mut y = b;
     let mut d1 = (b.pow(2)) - ((a.pow(2))*b) + (a.pow(2))/4;
-    ellipse_point(x + x_, y + y_, canvas);
+    ellipse_point(x, y, x_, y_, canvas);
     while (a.pow(2))*y >(b.pow(2))*(x+1){ //y- 0.5
         if d1 < 0 {
             d1 += (b.pow(2))*(2*x+3);
@@ -105,7 +103,8 @@ fn ellipse(x_: i32, y_: i32, a: i32, b: i32, canvas: &mut sdl2::render::Canvas<s
             y-=1;
         }
         x+=1;
-        ellipse_point(x + x_, y + y_, canvas);
+        ellipse_point(x, y, x_, y_, canvas);
     }
+    
 
 }
