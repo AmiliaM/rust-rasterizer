@@ -29,11 +29,17 @@ fn main() {
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
         canvas.set_draw_color(Color::RGB(0, 255, 255));
-        /*for y in 0..200 {
-            line(100, 100, 200, y, &mut canvas);
-        }*/
+        for y in 100..300 {
+            line(200, 200, 300, y, &mut canvas);
+            line(200, 200, 100, y, &mut canvas);
+        }
+        for x in 100..300 {
+            line(200, 200, x, 300, &mut canvas);
+            line(200, 200, x, 100, &mut canvas);
+        }
+        line(100, 100, 100, 200, &mut canvas);
         //rect(200, 200, 300, 300, &mut canvas);
-        ellipse(400, 400, 200, 100, &mut canvas);
+        //ellipse(400, 400, 200, 100, &mut canvas);
         canvas.present();
         let error = ::sdl2::get_error();
         if error != "" {
@@ -47,24 +53,33 @@ fn main() {
 
 fn line(x0: i32, y0: i32, x1: i32, y1: i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) { //Starting coordinate, finishing coordinate, reference to canvas
     //Bressenhalm line
-    let dy = y1 - y0;
-    let dx = x1 - x0;
-    let mut error = dx / 2;
-    let mut y = y0;
-    /*let mut y_step;
-    if dx > 0 {
-        y_step = 1;
-    }
-    else {
-        y_step = -1;
-    }*/
+    let dy = y1 - y0; 
+    let dx = x1 - x0; 
+    let mut error = dx / 2; 
+    let mut y = y0; 
+    let error_sign = if error < 0 {
+        -1
+    } else {
+        1
+    };
+    
+    let dy_sign = if dy < 0 {
+        -1
+    } else {
+        1
+    };
 
-    for x in x0..x1 {
-        error -= dy;
+    for x in if error_sign == 1 {
+        x0..x1
+    } else {
+        x1..x0
+    }
+    {
+        error -= dy*error_sign;
         canvas.draw_point(Point::new(x, y));
         if error <= 0 {
-            y += 1;
-            error += dx / 2;
+            y += 1*dy_sign;
+            error += (dx / 2)*error_sign;
         }
     }
 }
@@ -81,13 +96,14 @@ fn ellipse_point(x: i32, y: i32, x_:i32, y_:i32, canvas: &mut sdl2::render::Canv
     canvas.draw_point(Point::new(-x + x_, y + y_));
     canvas.draw_point(Point::new(x + x_, -y + y_));
     canvas.draw_point(Point::new(-x + x_, -y + y_));
+}
 
+fn ellipse_point2(x: i32, y: i32, x_:i32, y_:i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
     canvas.draw_point(Point::new(y + x_, x + y_));
     canvas.draw_point(Point::new(-y + x_, x + y_));
     canvas.draw_point(Point::new(y + x_, -x + y_));
     canvas.draw_point(Point::new(-y + x_, -x + y_));
 }
-
 fn ellipse(x_: i32, y_: i32, a: i32, b: i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) { //Center coordinate, width, height
     //Bressenhalm ellipse
     let mut x = 0;
@@ -105,6 +121,22 @@ fn ellipse(x_: i32, y_: i32, a: i32, b: i32, canvas: &mut sdl2::render::Canvas<s
         x+=1;
         ellipse_point(x, y, x_, y_, canvas);
     }
-    
+
+    let mut x = 0;
+    let mut y = b;
+    let mut d1 = (b.pow(2)) - ((a.pow(2))*b) + (a.pow(2))/4;
+    ellipse_point2(x, y, x_, y_, canvas);
+    while (a.pow(2))*y >(b.pow(2))*(x+1){ //y- 0.5
+        if d1 < 0 {
+            d1 += (b.pow(2))*(2*x+3);
+        }
+        else {
+            d1 += (b.pow(2))*(2*x+3)+(a.pow(2))*(-2*y+2);
+            y-=1;
+        }
+        x+=1;
+        ellipse_point2(x, y, x_, y_, canvas);
+    }
+
 
 }
