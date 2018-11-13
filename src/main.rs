@@ -1,11 +1,9 @@
+extern crate sdl2;
 use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::rect::Point;
 use std::time::Duration;
 
-
-extern crate sdl2;
 fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -29,17 +27,23 @@ fn main() {
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
         canvas.set_draw_color(Color::RGB(0, 255, 255));
+
+        let mut points: Vec<(i32, i32)> = Vec::new();
+
         for y in 100..300 {
-            line(200, 200, 300, y, &mut canvas);
-            line(200, 200, 100, y, &mut canvas);
+            points.extend(line(200, 200, 300, y));
+            points.extend(line(200, 200, 100, y));
         }
         for x in 100..300 {
-            line(200, 200, x, 300, &mut canvas);
-            line(200, 200, x, 100, &mut canvas);
+            points.extend(line(200, 200, x, 300));
+            points.extend(line(200, 200, x, 100));
         }
-        line(100, 100, 100, 200, &mut canvas);
-        //rect(200, 200, 300, 300, &mut canvas);
-        //ellipse(400, 400, 200, 100, &mut canvas);
+
+        //rect(200, 200, 300, 300);
+        //points.extend(ellipse(200, 200, 200, 200));
+
+        draw_points(points, &mut canvas);
+
         canvas.present();
         let error = ::sdl2::get_error();
         if error != "" {
@@ -49,67 +53,65 @@ fn main() {
     }
 }
 
-
-
-fn line(x0: i32, y0: i32, x1: i32, y1: i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) { //Starting coordinate, finishing coordinate, reference to canvas
-    //Bressenhalm line
-    let dy = y1 - y0; 
-    let dx = x1 - x0; 
-    let mut error = dx / 2; 
-    let mut y = y0; 
-    let error_sign = if error < 0 {
-        -1
-    } else {
-        1
-    };
-    
-    let dy_sign = if dy < 0 {
-        -1
-    } else {
-        1
-    };
-
-    for x in if error_sign == 1 {
-        x0..x1
-    } else {
-        x1..x0
-    }
-    {
-        error -= dy*error_sign;
-        canvas.draw_point(Point::new(x, y));
-        if error <= 0 {
-            y += 1*dy_sign;
-            error += (dx / 2)*error_sign;
+fn draw_points(points: Vec<(i32, i32)>, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
+    for p in points {
+        match canvas.draw_point(p) {
+            Ok(_) => {},
+            Err(e) => println!("Error: {}", e)
         }
     }
 }
 
-fn rect(x0: i32, y0: i32, x1: i32, y1: i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
-    line(x0, y0, x1, y0, canvas);
-    line(x0, y0, x0, y1, canvas);
-    line(x1, y0, x1, y1, canvas);
-    line(x0, y1, x1, y1, canvas);
+fn line(x0: i32, y0: i32, x1: i32, y1: i32) -> Vec<(i32, i32)> { //Starting coordinate, finishing coordinate
+    let dx = x1 - x0;
+    let dy = y1 - y0;
+    let m = {
+            if dy == 0 {
+                0
+            }
+            else {
+                dx/dy
+            }
+    };
+    let mut points: Vec<(i32, i32)> = vec!((x0, y0), (x1, y1));
+    let mut y = y0;
+    for x in x0..x1 {
+        y+= m;
+        points.push((x, (y as f32 + 0.5).floor() as i32));
+    }
+    points
 }
 
-fn ellipse_point(x: i32, y: i32, x_:i32, y_:i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
-    canvas.draw_point(Point::new(x + x_, y + y_));
-    canvas.draw_point(Point::new(-x + x_, y + y_));
-    canvas.draw_point(Point::new(x + x_, -y + y_));
-    canvas.draw_point(Point::new(-x + x_, -y + y_));
+fn rect(x0: i32, y0: i32, x1: i32, y1: i32) -> Vec<(i32, i32)> {
+    let mut points = line(x0, y0, x1, y0);
+    points.extend(line(x0, y0, x0, y1));
+    points.extend(line(x1, y0, x1, y1));
+    points.extend(line(x0, y1, x1, y1));
+    points
 }
 
-fn ellipse_point2(x: i32, y: i32, x_:i32, y_:i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
-    canvas.draw_point(Point::new(y + x_, x + y_));
-    canvas.draw_point(Point::new(-y + x_, x + y_));
-    canvas.draw_point(Point::new(y + x_, -x + y_));
-    canvas.draw_point(Point::new(-y + x_, -x + y_));
+fn ellipse_points(x: i32, y: i32, x_:i32, y_:i32) -> Vec<(i32, i32)> {
+    let mut points: Vec<(i32, i32)> = Vec::new();
+    points.push((x + x_, y + y_));
+    points.push((-x + x_, y + y_));
+    points.push((x + x_, -y + y_));
+    points.push((-x + x_, -y + y_));
+    points
 }
-fn ellipse(x_: i32, y_: i32, a: i32, b: i32, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) { //Center coordinate, width, height
-    //Bressenhalm ellipse
+fn ellipse_points2(x: i32, y: i32, x_:i32, y_:i32) -> Vec<(i32, i32)> {
+    let mut points: Vec<(i32, i32)> = Vec::new();
+    points.push((y + x_, x + y_));
+    points.push((-y + x_, x + y_));
+    points.push((y + x_, -x + y_));
+    points.push((-y + x_, -x + y_));
+    points
+}
+
+fn ellipse(x_: i32, y_: i32, a: i32, b: i32) -> Vec<(i32, i32)> { //Center coordinate, width, height
     let mut x = 0;
     let mut y = b;
     let mut d1 = (b.pow(2)) - ((a.pow(2))*b) + (a.pow(2))/4;
-    ellipse_point(x, y, x_, y_, canvas);
+    let mut points = ellipse_points(x, y, x_, y_);
     while (a.pow(2))*y >(b.pow(2))*(x+1){ //y- 0.5
         if d1 < 0 {
             d1 += (b.pow(2))*(2*x+3);
@@ -119,13 +121,13 @@ fn ellipse(x_: i32, y_: i32, a: i32, b: i32, canvas: &mut sdl2::render::Canvas<s
             y-=1;
         }
         x+=1;
-        ellipse_point(x, y, x_, y_, canvas);
+        points.extend(ellipse_points(x, y, x_, y_));
     }
 
     let mut x = 0;
     let mut y = b;
     let mut d1 = (b.pow(2)) - ((a.pow(2))*b) + (a.pow(2))/4;
-    ellipse_point2(x, y, x_, y_, canvas);
+    points.extend(ellipse_points2(x, y, x_, y_));
     while (a.pow(2))*y >(b.pow(2))*(x+1){ //y- 0.5
         if d1 < 0 {
             d1 += (b.pow(2))*(2*x+3);
@@ -135,8 +137,7 @@ fn ellipse(x_: i32, y_: i32, a: i32, b: i32, canvas: &mut sdl2::render::Canvas<s
             y-=1;
         }
         x+=1;
-        ellipse_point2(x, y, x_, y_, canvas);
+        points.extend(ellipse_points2(x, y, x_, y_));
     }
-
-
+    points
 }
