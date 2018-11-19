@@ -29,15 +29,15 @@ fn main() {
 
         let mut points: Vec<(i32, i32)> = Vec::new();
         
-        /*
+        
         for y in 100..300 {
-            //points.extend(line((200, 200), (300, y)));
-            //points.extend(line((200, 200), (100, y)));
+            points.extend(line((200, 200), (300, y)));
+            points.extend(line((200, 200), (100, y)));
         }
         for x in 100..300 {
-            //points.extend(line((200, 200), (x, 300)));
-            //points.extend(line((200, 200), (x, 100)));
-        }*/
+            points.extend(line((200, 200), (x, 300)));
+            points.extend(line((200, 200), (x, 100)));
+        }
 
         //points.extend(rect(200, 200, 300, 300));
         //points.extend(ellipse(200, 200, 200, 200));
@@ -67,19 +67,48 @@ fn draw_points(points: Vec<(i32, i32)>, canvas: &mut sdl2::render::Canvas<sdl2::
 fn line(p0: (i32, i32), p1: (i32, i32)) -> Vec<(i32, i32)> { //Starting coordinate, finishing coordinate
     let dx = p1.0 - p0.0;
     let dy = p1.1 - p0.1;
+    if dx < 0 {
+        return line(p1, p0);
+    }
     let m = {
-            if dy == 0 {
-                0
+            if dx == 0 {
+                0.0
             }
             else {
-                dx/dy
+                dy as f32/dx as f32
             }
     };
+    if m > 1.0 || m < -1.0 {
+        return line2((p1.1, p1.0), (p0.1, p0.0));
+    }
     let mut points: Vec<(i32, i32)> = vec!((p0.0, p0.1), (p1.0, p1.1));
-    let mut y = p0.1;
+    let mut y = p0.1 as f32;
     for x in p0.0..p1.0 {
-        y+= m;
-        points.push((x, (y as f32 + 0.5).floor() as i32));
+        y += m;
+        points.push((x, (y + 0.5).floor() as i32));
+    }
+    points
+}
+
+fn line2(p0: (i32, i32), p1: (i32, i32)) -> Vec<(i32, i32)> {
+    let dx = p1.0 - p0.0;
+    let dy = p1.1 - p0.1;
+    if dx < 0 {
+        return line2(p1, p0);
+    }
+    let m = {
+            if dx == 0 {
+                0.0
+            }
+            else {
+                dy as f32/dx as f32
+            }
+    };
+    let mut points: Vec<(i32, i32)> = vec!((p1.0, p1.1), (p0.0, p0.1));
+    let mut y = p0.1 as f32;
+    for x in p0.0..p1.0 {
+        y += m;
+        points.push(((y + 0.5).floor() as i32, x));
     }
     points
 }
