@@ -11,6 +11,8 @@ use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use std::time::Duration;
+use std::fs::File;
+use std::io::prelude::*;
 
 type Point = (i32, i32);
 type Line = (Point, Point);
@@ -192,7 +194,15 @@ fn main() {
                 },
                 Event::KeyDown { keycode: Some(Keycode::Down), .. } => {
                     let serial = serde_json::to_string(&scene).unwrap();
-                    println!("{}", serial);
+                    let mut file = File::create("saved_drawing.json").unwrap();
+                    file.write_all(&serial.as_bytes()).unwrap();
+                }
+                Event::KeyDown { keycode: Some(Keycode::Up), .. } => {
+                    let mut file = File::open("saved_drawing.json").unwrap();
+                    let mut contents = String::new();
+                    file.read_to_string(&mut contents).unwrap();
+                    scene = serde_json::from_str(&contents).unwrap();
+                    
                 }
                 Event::TextInput { text: text, .. } => {
                     println!("{}", text);
