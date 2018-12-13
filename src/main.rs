@@ -7,6 +7,7 @@ use sdl2::keyboard::Keycode;
 use std::time::Duration;
 
 type Point = (i32, i32);
+type Line = (Point, Point);
 
 pub trait VecExt {
     fn scissor(&mut self, p0: Point, p1: Point);
@@ -15,9 +16,22 @@ pub trait VecExt {
     fn translate(&mut self, x: i32, y: i32);
     fn rotate(&mut self, a: f32);
     fn scale(&mut self, a: f32, b: f32);
+    fn add(self, other:Vec<Point>) -> Vec<Point>;
 }
 
+enum Shape {
+    Circle { center: Point, width: i32, height: i32 },
+    Polygon(Vec<Point>),
+    Lines(Vec<Line>),
+}
 
+impl Shape {
+    fn for_letter(c: char) -> Shape {
+        let vec = do_soemthing();
+
+        Shape::Lines(vec)
+    }
+}
 
 fn main() {
     let sdl_context = sdl2::init().unwrap();
@@ -66,7 +80,7 @@ fn main() {
 
         points.scissor_iter((200, 200), (400, 400));
         */
-        for y in 100..500 {
+        /*for y in 100..500 {
             points.extend(line((100, y), (500, y)));
         }
 
@@ -74,8 +88,12 @@ fn main() {
 
         //points.scissor((0, 0), (800, 800));
 
-        points.scale(2.0, 2.0);
-        points.draw(&mut canvas);
+        points.scale(2.0, 2.0);*/
+        character('H', 310, 300).draw(&mut canvas);
+        for c in "FGIJKLMNOPQRSTUVWXYZ".chars() {
+            points.extend(character(c, 60, 300));
+        }
+       points.draw(&mut canvas);
 
         canvas.present();
         let error = ::sdl2::get_error();
@@ -161,6 +179,11 @@ impl VecExt for Vec<Point> { //(i32, i32)
             p.0 = (p.0 as f32 * a) as i32;
             p.1 = (p.1 as f32 * b) as i32;
         }
+    }
+    fn add(self, other:Vec<Point>) -> Vec<Point> {
+        let mut mlem = self;
+        mlem.extend(other);
+        return mlem
     }
 }
 
@@ -283,6 +306,51 @@ fn ellipse(p0: Point, a: i32, b: i32) -> Vec<Point> { //Center coordinate, width
     points
 }
 
+fn character(c: char, p: i32, s: i32) -> Vec<Point> {
+    return match c {
+        'A' => line((p, p+s), (p+(s/2), p)).add(
+               line((p+(s/2), p), (p+s, p+s))).add(
+               line((p+(s/4), p+(s/2)), (p+(3*s/4), p+(s/2)))),
+        'B' => line((p, p), (p+1, p+s)).add(
+               line((p, p), (p+(s/2), p+(s/4)))).add(
+               line((p+(s/2), p+(s/4)), (p, p+(s/2)))).add(
+               line((p, p+(s/2)), (p+(s/2), p+(3*s/4)))).add(
+               line((p+(s/2), p+(3*s/4)), (p, p+s))),
+        'C' => line((p+(s/2), p), (p, p+(s/2))).add(
+               line((p, p+(s/2)), (p+(s/2), p+s))),
+        'D' => line((p, p), (p+(s/2), p+(s/2))).add(
+               line((p+(s/2), p+(s/2)), (p, p+s))).add(
+               line((p, p), (p+1, p+s))),
+        'E' => line((p, p), (p+1, p+s)).add(
+               line((p, p), (p+s, p))).add(
+               line((p, p+(s/2)), (p+s, p+(s/2)))).add(
+               line((p, p+s), (p+s, p+s))),
+        'F' => vec!((1, 2)),
+        'G' => vec!((1, 2)),
+        'H' => line((p, p), (p+1, p+s)).add(
+               line((p+s, p), (p+s-1, p+s))).add(
+               line((p, p+(s/2)), (p+s, p+(s/2)))),
+        'I' => vec!((1, 2)),
+        'J' => vec!((1, 2)),
+        'K' => vec!((1, 2)),
+        'L' => vec!((1, 2)),
+        'M' => vec!((1, 2)),
+        'N' => vec!((1, 2)),
+        'O' => vec!((1, 2)),
+        'P' => vec!((1, 2)),
+        'Q' => vec!((1, 2)),
+        'R' => vec!((1, 2)),
+        'S' => vec!((1, 2)),
+        'T' => vec!((1, 2)),
+        'U' => vec!((1, 2)),
+        'V' => vec!((1, 2)),
+        'W' => vec!((1, 2)),
+        'X' => vec!((1, 2)),
+        'Y' => vec!((1, 2)),
+        'Z' => vec!((1, 2)),
+        _ => panic!("Attempted to generate unsupported letter")
+    }
+}
 
 
 #[cfg(test)]
