@@ -1,6 +1,12 @@
 #![feature(test)]
 extern crate test;
 extern crate sdl2;
+
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+extern crate serde_json;
+
 use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -19,16 +25,133 @@ pub trait VecExt {
     fn add(self, other:Vec<Point>) -> Vec<Point>;
 }
 
+#[derive(Serialize, Deserialize)]
+struct Scene {
+    objects: Vec<Object>
+}
+
+impl Scene {
+    fn new() -> Scene {
+        Scene {
+            objects: Vec::new(),
+        }
+    }
+    fn draw(&self) -> Vec<Point> {
+        let mut vec = Vec::new();
+        for object in self.objects.iter() {
+            vec.extend(object.draw());
+        }
+        vec
+    }
+    fn default_string(&mut self) -> Option<&mut Object> {
+        self.objects.iter_mut().filter(|x| if let &Object { shape: Shape::Letters(_), .. } = x { true } else { false }).next()
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct Object {
+    shape: Shape,
+    position: Point,
+    scale: i32,
+}
+
+impl Object {
+    fn new(shape: Shape, position: Point) -> Object {
+        Object {
+            shape,
+            position,
+            scale: 1,
+        }
+    }
+    fn draw(&self) -> Vec<Point> {
+        let mut points = self.shape.draw(self.scale);
+        points.translate(self.position.0, self.position.1);
+        points
+    }
+}
+
+#[derive(Serialize, Deserialize)]
 enum Shape {
     Circle { center: Point, width: i32, height: i32 },
     Polygon(Vec<Point>),
+    Letters(String),
     Lines(Vec<Line>),
 }
 
 impl Shape {
+    fn draw(&self, scale: i32) -> Vec<Point> {
+        match self {
+            Shape::Circle { center, width, height } => ellipse(*center, *width, *height),
+            Shape::Polygon(points) => polygon(points),
+            Shape::Letters(s) => {
+                let mut vec = Vec::new();
+                for (i, ch) in s.chars().enumerate() {
+                    let mut points = Shape::for_letter(ch).draw(scale);
+                    points.translate(100 * i as i32, 0);
+                    vec.extend(points.into_iter());
+                }
+                vec
+            }
+            Shape::Lines(lines) => {
+                let mut vec = Vec::new();
+                for l in lines {
+                    vec.extend(line(l.0, l.1));
+                }
+                vec
+            }
+        }
+    }
     fn for_letter(c: char) -> Shape {
-        let vec = do_soemthing();
-
+        let p0 = (0, 0);
+        let l0 = (p0, p0);
+        let s = 100;
+        let p = 0;
+        let c = c.to_uppercase().next().unwrap();
+        let vec = match c {
+            'A' => vec!(
+                ((p, p+s), (p+(s/2), p)),
+                ((p+(s/2), p), (p+s, p+s)),
+                ((p+(s/4), p+(s/2)), (p+(3*s/4), p+(s/2)))
+                ),
+            'B' => vec!(((p, p), (p+1, p+s)),
+                ((p, p), (p+(s/2), p+(s/4))),
+                ((p+(s/2), p+(s/4)), (p, p+(s/2))),
+                ((p, p+(s/2)), (p+(s/2), p+(3*s/4))),
+                ((p+(s/2), p+(3*s/4)), (p, p+s))),
+            'C' => vec!(((p+(s/2), p), (p, p+(s/2))),
+                ((p, p+(s/2)), (p+(s/2), p+s))),
+            'D' => vec!(((p, p), (p+(s/2), p+(s/2))),
+                ((p+(s/2), p+(s/2)), (p, p+s)),
+                ((p, p), (p+1, p+s))),
+            'E' => vec!(((p, p), (p+1, p+s)),
+                ((p, p), (p+s, p)),
+                ((p, p+(s/2)), (p+s, p+(s/2))),
+                ((p, p+s), (p+s, p+s))),
+            'F' => vec![((1, 2),(2, 4)), ((1, 2),(2, 4))],
+            'G' => vec!(l0),
+            'H' => vec!(((p, p), (p+1, p+s)),
+                ((p+s, p), (p+s-1, p+s)),
+                ((p, p+(s/2)), (p+s, p+(s/2)))),
+            'I' => vec!(((1, 2),(1, 2),)),
+            'J' => vec!(l0),
+            'K' => vec!(l0),
+            'L' => vec!(l0),
+            'M' => vec!(l0),
+            'N' => vec!(l0),
+            'O' => vec!(l0),
+            'P' => vec!(l0),
+            'Q' => vec!(l0),
+            'R' => vec!(l0),
+            'S' => vec!(l0),
+            'T' => vec!(l0),
+            'U' => vec!(l0),
+            'V' => vec!(l0),
+            'W' => vec!(l0),
+            'X' => vec!(l0),
+            'Y' => vec!(l0),
+            'Z' => vec!(l0),
+            _ => panic!("Attempted to generate unsupported letter")
+        };
         Shape::Lines(vec)
     }
 }
@@ -42,12 +165,40 @@ fn main() {
         .unwrap();
     let mut canvas: sdl2::render::Canvas<sdl2::video::Window> = window.into_canvas().accelerated().present_vsync().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
+
+    let mut scene = Scene::new();
+    let letter = Object::new(Shape::for_letter('A'), (100, 100));
+    let poly = Object::new(Shape::Polygon(vec![(100, 100), (200, 200), (100, 200)]), (50, 50));
+    let st = Object::new(Shape::Letters("abcd".to_string()), (50, 50));
+
+    scene.objects.extend(vec!(poly,letter,st));
+
+    video_subsystem.text_input().start();
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit {..} |
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     break 'running
+                },
+                Event::KeyDown { keycode: Some(Keycode::Backspace), .. } => {
+                    if let Some(&mut Object { shape: Shape::Letters(ref mut s), .. } ) = scene.default_string() {
+                        let l = { s.len() };
+                        if l <= 0 {
+                            continue;
+                        }
+                        s.remove(l-1);
+                    }
+                },
+                Event::KeyDown { keycode: Some(Keycode::Down), .. } => {
+                    let serial = serde_json::to_string(&scene).unwrap();
+                    println!("{}", serial);
+                }
+                Event::TextInput { text: text, .. } => {
+                    println!("{}", text);
+                    if let Some(&mut Object { shape: Shape::Letters(ref mut s), .. } ) = scene.default_string() {
+                        *s += &text;
+                    }
                 },
                 _ => {}
             }
@@ -58,73 +209,32 @@ fn main() {
 
         let mut points: Vec<Point> = Vec::new();
         
-        /*
-        for y in 100..300 {
-            points.extend(line((200, 200), (300, y)));
-            points.extend(line((200, 200), (100, y)));
-        }
-        for x in 100..300 {
-            points.extend(line((200, 200), (x, 300)));
-            points.extend(line((200, 200), (x, 100)));
-        }*/
-        /*
-        for y in 100..500 {
-            points.extend(line((100, y), (500, y)));
-        }
-
-        //println!("{}", points.len());
-        //points.extend(rect(200, 200, 300, 300));
-        //points.extend(ellipse(200, 200, 200, 200));
-
-        //points.extend(line((200, 200), (300, 300)));
-
-        points.scissor_iter((200, 200), (400, 400));
-        */
-        /*for y in 100..500 {
-            points.extend(line((100, y), (500, y)));
-        }
-
-        //points.extend(polygon(&vec!((100 ,100), (200, 200), (300, 500), (200, 600))));
-
-        //points.scissor((0, 0), (800, 800));
-
-        points.scale(2.0, 2.0);*/
-        character('H', 310, 300).draw(&mut canvas);
-        for c in "FGIJKLMNOPQRSTUVWXYZ".chars() {
-            points.extend(character(c, 60, 300));
-        }
-       points.draw(&mut canvas);
-
+        points.extend(scene.draw().into_iter());
+        points.draw(&mut canvas);
+        
         canvas.present();
-        let error = ::sdl2::get_error();
+        /*let error = ::sdl2::get_error();
         if error != "" {
             println!("{}", error);
-        }
+        }*/
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }
 
-impl VecExt for Vec<Point> { //(i32, i32)
+impl VecExt for Vec<Point> { 
     fn scissor(&mut self, p0: Point, p1: Point) {
-        //sort list by x coordinate
         self.sort_by_key(|x| x.0);
-        //delete every item with x < p0.0 or x > p1.0
-        //binary search for x = p0.0 (x needs to = the first occurance of p0.0 in order to include all correct values)
         let x0 = match self.binary_search_by_key(&(p0.0-1), |x| x.0) {
                     Ok(e) => e, 
                     Err(e) => e
                 };
-        //binary search for x = p1.0
         let x1 = match self.binary_search_by_key(&(p1.0+1), |x| x.0) {
                     Ok(e) => e, 
                     Err(e) => e
                 };
-        //make a slice of x where x = p0.0..x where x = p1.0
         self.truncate(x1);
         *self = self.split_off(x0);
-        //sort list by y coordinate
         self.sort_by_key(|x| x.1);
-        //delete every item with y < p01 or y > p1.1
         let y0 = match self.binary_search_by_key(&(p0.1-1), |x| x.1) {
                     Ok(e) => e, 
                     Err(e) => e
@@ -138,17 +248,13 @@ impl VecExt for Vec<Point> { //(i32, i32)
         self.shrink_to_fit();
     }
     fn scissor_iter(&mut self, p0: Point, p1: Point) { 
-        //sort list by x coordinate
         self.sort_by_key(|x| x.0);
-        //delete every item with x < p0.0 or x > p1.0
         let x: Vec<_> = self.drain(..)
                             .skip_while(|x| x.0 < p0.0)
                             .take_while(|x| x.0 < p1.0)
                             .collect();
         self.extend(x);
-        //sort list by y coordinate
         self.sort_by_key(|x| x.1);
-        //delete every item with y < p0.1 or y > p1.1
         let x: Vec<_> = self.drain(..)
                             .skip_while(|x| x.1 < p0.1)
                             .take_while(|x| x.1 < p1.1)
@@ -228,7 +334,7 @@ fn line2(p0: Point, p1: Point) -> Vec<Point> {
                 dy as f32/dx as f32
             }
     };
-    let mut points: Vec<Point> = vec!((p1.0, p1.1), (p0.0, p0.1));
+    let mut points: Vec<Point> = vec!((p1.1, p1.0), (p0.1, p0.0));
     let mut y = p0.1 as f32;
     for x in p0.0..p1.0 {
         y += m;
@@ -305,53 +411,6 @@ fn ellipse(p0: Point, a: i32, b: i32) -> Vec<Point> { //Center coordinate, width
     }
     points
 }
-
-fn character(c: char, p: i32, s: i32) -> Vec<Point> {
-    return match c {
-        'A' => line((p, p+s), (p+(s/2), p)).add(
-               line((p+(s/2), p), (p+s, p+s))).add(
-               line((p+(s/4), p+(s/2)), (p+(3*s/4), p+(s/2)))),
-        'B' => line((p, p), (p+1, p+s)).add(
-               line((p, p), (p+(s/2), p+(s/4)))).add(
-               line((p+(s/2), p+(s/4)), (p, p+(s/2)))).add(
-               line((p, p+(s/2)), (p+(s/2), p+(3*s/4)))).add(
-               line((p+(s/2), p+(3*s/4)), (p, p+s))),
-        'C' => line((p+(s/2), p), (p, p+(s/2))).add(
-               line((p, p+(s/2)), (p+(s/2), p+s))),
-        'D' => line((p, p), (p+(s/2), p+(s/2))).add(
-               line((p+(s/2), p+(s/2)), (p, p+s))).add(
-               line((p, p), (p+1, p+s))),
-        'E' => line((p, p), (p+1, p+s)).add(
-               line((p, p), (p+s, p))).add(
-               line((p, p+(s/2)), (p+s, p+(s/2)))).add(
-               line((p, p+s), (p+s, p+s))),
-        'F' => vec!((1, 2)),
-        'G' => vec!((1, 2)),
-        'H' => line((p, p), (p+1, p+s)).add(
-               line((p+s, p), (p+s-1, p+s))).add(
-               line((p, p+(s/2)), (p+s, p+(s/2)))),
-        'I' => vec!((1, 2)),
-        'J' => vec!((1, 2)),
-        'K' => vec!((1, 2)),
-        'L' => vec!((1, 2)),
-        'M' => vec!((1, 2)),
-        'N' => vec!((1, 2)),
-        'O' => vec!((1, 2)),
-        'P' => vec!((1, 2)),
-        'Q' => vec!((1, 2)),
-        'R' => vec!((1, 2)),
-        'S' => vec!((1, 2)),
-        'T' => vec!((1, 2)),
-        'U' => vec!((1, 2)),
-        'V' => vec!((1, 2)),
-        'W' => vec!((1, 2)),
-        'X' => vec!((1, 2)),
-        'Y' => vec!((1, 2)),
-        'Z' => vec!((1, 2)),
-        _ => panic!("Attempted to generate unsupported letter")
-    }
-}
-
 
 #[cfg(test)]
 mod tests {
