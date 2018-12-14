@@ -1,5 +1,5 @@
-#![feature(test)]
-extern crate test;
+//#![feature(test)]
+//extern crate test;
 extern crate sdl2;
 
 #[macro_use]
@@ -74,7 +74,7 @@ impl Object {
 
 #[derive(Serialize, Deserialize)]
 enum Shape {
-    Circle { center: Point, width: i32, height: i32 },
+    Circle { width: i32, height: i32 },
     Polygon(Vec<Point>),
     Letters(String),
     Lines(Vec<Line>),
@@ -83,7 +83,7 @@ enum Shape {
 impl Shape {
     fn draw(&self, scale: i32) -> Vec<Point> {
         match self {
-            Shape::Circle { center, width, height } => ellipse(*center, *width, *height),
+            Shape::Circle { width, height } => ellipse( (0, 0), *width, *height),
             Shape::Polygon(points) => polygon(points),
             Shape::Letters(s) => {
                 let mut vec = Vec::new();
@@ -169,11 +169,12 @@ fn main() {
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut scene = Scene::new();
-    let letter = Object::new(Shape::for_letter('A'), (100, 100));
-    let poly = Object::new(Shape::Polygon(vec![(100, 100), (200, 200), (100, 200)]), (50, 50));
-    let st = Object::new(Shape::Letters("abcd".to_string()), (50, 50));
+    //let letter = Object::new(Shape::for_letter('A'), (100, 100));
+    //let poly = Object::new(Shape::Polygon(vec![(100, 100), (200, 200), (100, 200)]), (50, 50));
+    let st = Object::new(Shape::Letters("".to_string()), (50, 50));
+    let blel = Object::new(Shape::Circle { height: 50, width: 100 }, (300, 300) );
 
-    scene.objects.extend(vec!(poly,letter,st));
+    scene.objects.extend(vec!(st, blel));
 
     video_subsystem.text_input().start();
     'running: loop {
@@ -186,7 +187,7 @@ fn main() {
                 Event::KeyDown { keycode: Some(Keycode::Backspace), .. } => {
                     if let Some(&mut Object { shape: Shape::Letters(ref mut s), .. } ) = scene.default_string() {
                         let l = { s.len() };
-                        if l <= 0 {
+                        if l == 0 {
                             continue;
                         }
                         s.remove(l-1);
@@ -202,9 +203,8 @@ fn main() {
                     let mut contents = String::new();
                     file.read_to_string(&mut contents).unwrap();
                     scene = serde_json::from_str(&contents).unwrap();
-                    
                 }
-                Event::TextInput { text: text, .. } => {
+                Event::TextInput { text, .. } => {
                     println!("{}", text);
                     if let Some(&mut Object { shape: Shape::Letters(ref mut s), .. } ) = scene.default_string() {
                         *s += &text;
@@ -361,23 +361,6 @@ fn rect(p0: Point, p1: Point) -> Vec<Point> {
     points
 }
 
-fn ellipse_points(x: i32, y: i32, p0: Point) -> Vec<Point> {
-    let mut points: Vec<Point> = Vec::new();
-    points.push((x + p0.0, y + p0.1));
-    points.push((-x + p0.0, y + p0.1));
-    points.push((x + p0.0, -y + p0.1));
-    points.push((-x + p0.0, -y + p0.1));
-    points
-}
-fn ellipse_points2(x: i32, y: i32, p0: Point) -> Vec<Point> {
-    let mut points: Vec<Point> = Vec::new();
-    points.push((y + p0.0, x + p0.1));
-    points.push((-y + p0.0, x + p0.1));
-    points.push((y + p0.0, -x + p0.1));
-    points.push((-y + p0.0, -x + p0.1));
-    points
-}
-
 fn polygon(corners: &Vec<Point>) -> Vec<Point> {
     let mut points: Vec<Point> = Vec::new();
     for x in corners.windows(2) {
@@ -386,6 +369,16 @@ fn polygon(corners: &Vec<Point>) -> Vec<Point> {
     points.extend(line(corners[0], corners[corners.len() - 1]));
     points
 }
+
+fn ellipse_points(x: i32, y: i32, p0: Point) -> Vec<Point> {
+    let mut points: Vec<Point> = Vec::new();
+    points.push((x + p0.0, y + p0.1));
+    points.push((-x + p0.0, y + p0.1));
+    points.push((x + p0.0, -y + p0.1));
+    points.push((-x + p0.0, -y + p0.1));
+    points
+}
+
 
 fn ellipse(p0: Point, a: i32, b: i32) -> Vec<Point> { //Center coordinate, width, height
     let mut x = 0;
@@ -403,21 +396,16 @@ fn ellipse(p0: Point, a: i32, b: i32) -> Vec<Point> { //Center coordinate, width
         x+=1;
         points.extend(ellipse_points(x, y, p0));
     }
-
-    let mut x = 0;
-    let mut y = b;
-    let mut d1 = (b.pow(2)) - ((a.pow(2))*b) + (a.pow(2))/4;
-    points.extend(ellipse_points2(x, y, p0));
-    while (a.pow(2))*y >(b.pow(2))*(x+1){ //y- 0.5
-        if d1 < 0 {
-            d1 += (b.pow(2))*(2*x+3);
+    let mut d2 = b.pow(2) * ((x).pow(2)) + a.pow(2) * ((y - 1).pow(2)) - (a.pow(2) * b.pow(2));
+    while y > 0 {
+        if d2 < 0 {
+            d2 += b.pow(2) * (2 * x + 2) + a.pow(2) * (-2 * y + 3);
+            x += 1;
+        } else {
+            d2 += a.pow(2) * (-2 * y + 3);
         }
-        else {
-            d1 += (b.pow(2))*(2*x+3)+(a.pow(2))*(-2*y+2);
-            y-=1;
-        }
-        x+=1;
-        points.extend(ellipse_points2(x, y, p0));
+        y -= 1;
+        points.extend(ellipse_points(x, y, p0));
     }
     points
 }
