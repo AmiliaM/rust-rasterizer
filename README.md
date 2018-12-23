@@ -91,7 +91,7 @@ Load the scene state from `saved_drawing.json` in the current directory.
 
 ### Object Model
 * `Scene` - Holds objects, group->number mappings, intrinsic camera (trans+rot+scale)
-    * `Object` - Has an underlying shape; holds basic transformation logic and parameters (traans+rot+scale)
+    * `Object` - Has an underlying shape; holds basic transformation logic and parameters (trans+rot+scale)
         * `Shape` - Enum of shapes parameterized over draw implementation needs; holds draw logic
             * `Circle` - Represents a circle using `width(i32)` and `height(i32)` parameters
             * `Rect` - Represents a rectangle using two `Point`s
