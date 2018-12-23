@@ -3,6 +3,11 @@ name = "rusterizer"
 version = "0.1.0"
 authors = ["AmiliaM <amiliamac@gmail.com>"]
 
+[dependencies]
+serde = "*"
+serde_json = "*"
+serde_derive = "*"
+
 [dependencies.sdl2]
 version = "0.31.0"
 default-features = true
